@@ -9,14 +9,13 @@ import (
 	"github.com/skibnev/citiesGame/models"
 	"github.com/skibnev/citiesGame/validator"
 	"log"
-	"os"
 	"reflect"
 )
 
 func main() {
 	var message tgbotapi.MessageConfig
 	var citiesMap map[string]string
-	//uncomment when you need to add cities to the json file from the geoNames API
+	//uncomment when you need to add cities to the json file from API
 	//cities := cities_api.ParseCities()
 	//citiesInJson, _ := json.Marshal(cities)
 	//helper.WriteToFile("Cities.json", citiesInJson)
@@ -37,23 +36,22 @@ func main() {
 			if update.Message.Text == "/start" && helper.GetData(update.Message.Chat.ID).UsedCities == nil {
 				json.Unmarshal(helper.ReadFromFile("Cities.json"), &citiesMap)
 				newUserData := models.UserInfo{
-					LastChar:   make([]rune, 1),
-					NewCity:    make([]string, 1),
-					UsedCities: make(map[string]string),
+					PrevGameAnswer: new(models.GameAnswer),
+					UsedCities:     make(map[string]*string),
 				}
 				helper.PutData(update.Message.Chat.ID, newUserData)
 				message = tgbotapi.NewMessage(update.Message.Chat.ID, "Добро пожаловать в игру ГОРОДА. Введите название города")
 				bot.Send(message)
 			} else {
 				userData := helper.GetData(update.Message.Chat.ID)
-				if validator.CheckUserInput(update.Message.Text, citiesMap, userData.UsedCities, &userData.LastChar[0]) {
+				if validator.CheckUserInput(update.Message.Text, citiesMap, userData.UsedCities, &userData.PrevGameAnswer.LastChar) {
 					cityFound := game_algorithm.GetNewCity(update.Message.Text, citiesMap, &userData)
 					if !cityFound {
 						message = tgbotapi.NewMessage(update.Message.Chat.ID, "Поздравляем !!! Вы выиграли")
-						os.Exit(0)
 					} else {
-						message = tgbotapi.NewMessage(update.Message.Chat.ID, userData.NewCity[0])
+						message = tgbotapi.NewMessage(update.Message.Chat.ID, userData.PrevGameAnswer.NewCity)
 					}
+					helper.PutData(update.Message.Chat.ID, userData)
 					bot.Send(message)
 				} else {
 					message = tgbotapi.NewMessage(update.Message.Chat.ID, "Не корректно введенное слово !!! Попробуйте еще раз")

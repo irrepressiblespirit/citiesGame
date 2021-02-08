@@ -1,8 +1,11 @@
 package models
 
 type UserInfo struct {
-	LastChar       []rune
-	NewCity        []string
-	UsedCities     map[string]string
+	PrevGameAnswer *GameAnswer
+	UsedCities     map[string]*string
 }
 
+type GameAnswer struct {
+	LastChar rune
+	NewCity  string
+}

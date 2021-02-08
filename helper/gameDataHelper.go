@@ -7,9 +7,10 @@ import (
 var data = make(map[int64]models.UserInfo)
 
 func GetData(chatId int64) models.UserInfo {
-	newUser := data[chatId]
-	return newUser
-
+	if _, ok := data[chatId]; ok {
+		return data[chatId]
+	}
+	return models.UserInfo{}
 }
 
 func PutData(chatId int64, userData models.UserInfo) {
